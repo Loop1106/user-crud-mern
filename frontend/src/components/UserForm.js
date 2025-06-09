@@ -7,28 +7,76 @@ function UserForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
-    password: ''
+    password: '',
+    image: null
   });
+  const [preview, setPreview] = useState(null);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    if (e.target.name === 'image') {
+      const file = e.target.files[0];
+      if (file) {
+        // Check file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error('Image size should be less than 10MB');
+          e.target.value = null;
+          return;
+        }
+        setFormData({
+          ...formData,
+          image: file
+        });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setFormData({
+          ...formData,
+          image: null
+        });
+        setPreview(null);
+      }
+    } else {
+      setFormData({
+        ...formData,
+        [e.target.name]: e.target.value
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+
     try {
-      const response = await axios.post('http://localhost:3000/api/users', formData);
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('password', formData.password);
+      if (formData.image) {
+        formDataToSend.append('image', formData.image);
+      }
+
+      const response = await axios.post('http://localhost:3000/api/users', formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
       if (response.data.status) {
         toast.success('User added successfully!');
         navigate('/');
       }
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to add user');
-      toast.error(error.response?.data?.message || 'Failed to add user');
+      const errorMessage = error.response?.data?.message || 'Failed to add user';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
  
@@ -61,7 +109,24 @@ function UserForm() {
             placeholder="Enter password"
           />
         </div>
-        <button type="submit">Add User</button>
+        <div className="form-group">
+          <label htmlFor="image">Profile Image:</label>
+          <input
+            type="file"
+            id="image"
+            name="image"
+            onChange={handleChange}
+            accept="image/*"
+          />
+          {preview && (
+            <div className="image-preview">
+              <img src={preview} alt="Preview" />
+            </div>
+          )}
+        </div>
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Adding User...' : 'Add User'}
+        </button>
       </form>
     </div>
   );

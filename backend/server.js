@@ -1,42 +1,37 @@
 import express from "express";
-import dotenv from "dotenv";
-import connectDB from "./config/db.js";
-import User from "./models/Users.js";
+import mongoose from "mongoose";
 import cors from "cors";
+import userRoutes from "./routes/userRoutes.js";
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import fs from 'fs';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
-app.use(express.json());
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+}
+
+// Middleware
 app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static(join(__dirname, 'uploads')));
 
-connectDB();
+// Routes
+app.use("/api/users", userRoutes);
 
-app.post("/api/users", async (req, res) => {
-    const user = req.body;
-    const newUser = new User(user);
-    await newUser.save();
-    res.status(201).json({ status: true, message: "User created successfully" });
-});
+// MongoDB connection
+mongoose.connect("mongodb://127.0.0.1:27017/user_management")
+    .then(() => console.log("Connected to MongoDB"))
+    .catch((error) => console.error("MongoDB connection error:", error));
 
-app.put("/api/users/:id", async (req, res) => {
-    const { id } = req.params;
-    const user = req.body;
-    await User.findByIdAndUpdate(id, user);
-    res.status(200).json({ status: true, message: "User updated successfully" });
-});
-
-app.delete("/api/users/:id", async (req, res) => {
-    const { id } = req.params;
-    await User.findByIdAndDelete(id);
-    res.status(200).json({ status: true, message: "User deleted successfully" });
-});
-
-app.get("/api/users", async (req, res) => {
-    const users = await User.find();
-    res.status(200).json({ status: true, data: users });
-});
-
-app.listen(3000, () => {
-    console.log("Server is running on port 3000");
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });

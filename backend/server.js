@@ -23,7 +23,7 @@ app.post("/api/products", async (req, res) => {
     const product = req.body;
     const newProduct = new Product(product);
     await newProduct.save();
-    res.status(201).json({ status: true, message: "Product created successfully" });
+    res.status(201).json({ status: true, message: "Product created successfullys" });
 });
 
 app.delete("/api/products/:id", async (req,res)=>{

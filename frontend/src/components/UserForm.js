@@ -22,7 +22,7 @@ function UserForm() {
     try {
       const response = await axios.post('http://localhost:3000/api/users', formData);
       if (response.data.status) {
-        navigate('/users');
+        navigate('/');
       }
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to add user');

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function UserForm() {
   const navigate = useNavigate();
@@ -22,13 +23,15 @@ function UserForm() {
     try {
       const response = await axios.post('http://localhost:3000/api/users', formData);
       if (response.data.status) {
+        toast.success('User added successfully!');
         navigate('/');
       }
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to add user');
+      toast.error(error.response?.data?.message || 'Failed to add user');
     }
   };
-
+ 
   return (
     <div className="user-form">
       <h2>Add New User</h2>

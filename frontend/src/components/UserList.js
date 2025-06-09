@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function UserList() {
   const [users, setUsers] = useState([]);
@@ -14,6 +15,7 @@ function UserList() {
       }
     } catch (error) {
       setError('Failed to fetch users');
+      toast.error('Failed to fetch users');
     }
   };
 
@@ -26,10 +28,12 @@ function UserList() {
       try {
         const response = await axios.delete(`http://localhost:3000/api/users/${id}`);
         if (response.data.status) {
+          toast.success('User deleted successfully!');
           fetchUsers();
         }
       } catch (error) {
         setError('Failed to delete user');
+        toast.error('Failed to delete user');
       }
     }
   };
@@ -38,11 +42,13 @@ function UserList() {
     try {
       const response = await axios.put(`http://localhost:3000/api/users/${id}`, updatedData);
       if (response.data.status) {
+        toast.success('User updated successfully!');
         setEditingUser(null);
         fetchUsers();
       }
     } catch (error) {
       setError('Failed to update user');
+      toast.error('Failed to update user');
     }
   };
 
